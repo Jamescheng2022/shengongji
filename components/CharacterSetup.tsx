@@ -36,12 +36,12 @@ export default function CharacterSetup() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-start px-3 sm:px-4 py-6 safe-top safe-bottom overflow-y-auto">
+    <div className="h-dvh flex flex-col items-center justify-start px-3 sm:px-4 pt-6 pb-4 safe-top safe-bottom overflow-hidden">
       {/* 返回 */}
-      <div className="w-full max-w-md flex items-center justify-between mb-4">
+      <div className="w-full max-w-md flex items-center justify-between mb-4 shrink-0">
         <button
           onClick={() => (step > 1 ? setStep((step - 1) as 1 | 2 | 3) : setScreen("home"))}
-          className="text-sm"
+          className="text-sm min-h-[44px] flex items-center active:scale-95"
           style={{ color: "var(--text-secondary)" }}
         >
           ← {step > 1 ? "上一步" : "返回"}
@@ -52,7 +52,7 @@ export default function CharacterSetup() {
       </div>
 
       {/* 进度条 */}
-      <div className="w-full max-w-md flex gap-1 mb-6">
+      <div className="w-full max-w-md flex gap-1 mb-6 shrink-0">
         {[1, 2, 3].map((s) => (
           <div
             key={s}
@@ -64,7 +64,7 @@ export default function CharacterSetup() {
         ))}
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md flex-1 min-h-0 overflow-y-auto custom-scrollbar pb-6">
         {/* ====== 第一步：姓名 + 头像 ====== */}
         {step === 1 && (
           <div className="animate-fade-in-up">
