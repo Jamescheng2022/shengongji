@@ -1,17 +1,24 @@
 import type { GameState } from './game-engine';
+import { ORIGIN_OPTIONS, PERSONALITY_OPTIONS } from './game-engine';
 
 /**
  * 构建给AI的System Prompt
  * 核心策略：角色设定 + 世界观 + 当前状态 + 格式约束
  */
 export function buildSystemPrompt(state: GameState): string {
+  const p = state.playerProfile;
+  const originInfo = ORIGIN_OPTIONS.find(o => o.id === p.origin);
+  const personalityInfo = PERSONALITY_OPTIONS.find(pr => pr.id === p.personality);
+
   return `你是一位资深古风互动小说编剧。你正在为读者创作一部名为《深宫纪》的互动宫廷小说。
 
 ## 世界观
 - 朝代：景隆朝（架空朝代，参考清朝康雍时期宫廷风格）
-- 主角：沈知意，汉军旗出身，父亲沈德山为大理寺少卿
+- 主角：${p.fullName}，${originInfo?.desc || '汉军旗出身'}
+- 主角性格：${personalityInfo?.label || '隐忍'} — ${personalityInfo?.desc || ''}
 - 当前位份：${state.rank}
 - 当前集数：第${state.currentEpisode}集（共100集）
+- 注意：在剧情中始终使用主角名字"${p.fullName}"（姓${p.surname}），且对白和描写要符合其"${personalityInfo?.label || '隐忍'}"的性格特点
 
 ## 宫廷人物（可在剧情中出现）
 - 皇帝：景隆帝，年约三十，城府极深，喜好才情兼备的女子
@@ -92,19 +99,24 @@ export function buildUserMessage(state: GameState, playerInput: string): string 
 /**
  * 第一集的开场剧情（预设，不消耗AI调用）
  */
-export const OPENING_NARRATION = `景隆二年，暮春三月。
+export function getOpeningNarration(fullName: string, surname: string): string {
+  return `景隆二年，暮春三月。
 
-紫禁城的朱红大门在晨曦中缓缓开启，沈知意随着一众秀女鱼贯而入。她不自觉地攥紧了手中的帕子——那是母亲临别时塞给她的，帕角绣着一朵素净的兰花。
+紫禁城的朱红大门在晨曦中缓缓开启，${fullName}随着一众秀女鱼贯而入。她不自觉地攥紧了手中的帕子——那是母亲临别时塞给她的，帕角绣着一朵素净的兰花。
 
-"记住，在宫里，少说话，多观察。"父亲沈德山的叮嘱犹在耳畔。
+"记住，在宫里，少说话，多观察。"父亲${surname}大人的叮嘱犹在耳畔。
 
 储秀宫院中，教导嬷嬷王氏面容冷峻，目光如炬扫过每一张青涩的面孔："进了这道门，你们便不再是谁家的千金小姐。生死荣辱，全凭各人造化。规矩，是宫里的命。丢了规矩的人——"她顿了顿，嘴角微沉，"便是丢了命。"
 
-一阵窸窣声中，身旁一位衣着华贵的女子轻哼一声。沈知意侧目望去，只见她珠翠满头、眉目倨傲——是蒙古科尔沁部的博尔济吉特氏·乌兰。
+一阵窸窣声中，身旁一位衣着华贵的女子轻哼一声。${fullName}侧目望去，只见她珠翠满头、眉目倨傲——是蒙古科尔沁部的博尔济吉特氏·乌兰。
 
-乌兰瞥了沈知意一眼，压低声音道："汉军旗的，站远些。别沾了本小姐的贵气。"
+乌兰瞥了${fullName}一眼，压低声音道："站远些。别沾了本小姐的贵气。"
 
-几双眼睛悄悄看向这边。沈知意感到后背微微发凉。`;
+几双眼睛悄悄看向这边。${fullName}感到后背微微发凉。`;
+}
+
+// 向后兼容的静态常量
+export const OPENING_NARRATION = getOpeningNarration('沈知意', '沈');
 
 export const OPENING_CHOICES = [
   { id: 1, text: '垂眸不语，默默退后半步' },

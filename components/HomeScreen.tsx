@@ -17,37 +17,37 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-palace flex flex-col items-center justify-center px-4 relative">
+    <div className="min-h-dvh bg-palace flex flex-col items-center justify-center px-4 relative safe-top safe-bottom">
       {/* 半透明遮罩 */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
       {/* 内容层 */}
-      <div className="relative z-10 flex flex-col items-center w-full">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-sm">
         {/* 装饰线 */}
-        <div className="w-32 divider-gold mb-8" />
+        <div className="w-24 sm:w-32 divider-gold mb-6 sm:mb-8" />
 
         {/* 标题 */}
         <h1
-          className="text-5xl md:text-7xl font-black tracking-[0.3em] mb-3 text-center"
+          className="text-4xl sm:text-5xl md:text-7xl font-black tracking-[0.2em] sm:tracking-[0.3em] mb-2 sm:mb-3 text-center"
           style={{ color: "var(--palace-gold)" }}
         >
           深宫纪
         </h1>
-        <p className="text-sm tracking-[0.5em] mb-2" style={{ color: "var(--text-secondary)" }}>
+        <p className="text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.5em] mb-1.5 sm:mb-2" style={{ color: "var(--text-secondary)" }}>
           S H E N G O N G J I
         </p>
         <p
-          className="text-xs tracking-widest mb-12"
+          className="text-xs tracking-widest mb-8 sm:mb-12"
           style={{ color: "var(--text-secondary)", opacity: 0.6 }}
         >
           AI 互动宫廷小说 · 存活即胜利
         </p>
 
         {/* 装饰线 */}
-        <div className="w-24 divider-gold mb-10" />
+        <div className="w-20 sm:w-24 divider-gold mb-8 sm:mb-10" />
 
         {/* 菜单 */}
-        <div className="flex flex-col gap-4 w-full max-w-xs">
+        <div className="flex flex-col gap-3 sm:gap-4 w-full">
           {/* 继续游戏 */}
           {latestSave && (
             <button
@@ -56,13 +56,13 @@ export default function HomeScreen() {
             >
               <div className="font-semibold">继续游戏</div>
               <div className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-                第{latestSave.currentEpisode}集 · {getRankTitle(latestSave.rank)}
+                第{latestSave.currentEpisode}集 · {getRankTitle(latestSave.rank, latestSave.playerProfile)}
               </div>
             </button>
           )}
 
-          {/* 新的开始 */}
-          <button onClick={startNewGame} className="btn-palace">
+          {/* 新的开始 → 角色创建 */}
+          <button onClick={() => setScreen("character-setup")} className="btn-palace">
             新的开始
           </button>
 

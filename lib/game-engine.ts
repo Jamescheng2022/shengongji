@@ -58,9 +58,55 @@ export interface Chapter {
   timestamp: number;             // 记录时间
 }
 
+// ---------- 角色档案 ----------
+
+export interface PlayerProfile {
+  surname: string;       // 姓氏（如"沈"）
+  givenName: string;     // 名字（如"知意"）
+  fullName: string;      // 完整名字
+  avatarId: string;      // 头像ID（对应预设古风头像）
+  origin: string;        // 出身（如"书香门第"、"将门虎女"等）
+  personality: string;   // 性格倾向（如"隐忍"、"果决"、"温婉"等）
+}
+
+export const AVATAR_OPTIONS: { id: string; label: string; emoji: string; desc: string }[] = [
+  { id: 'gentle',    label: '温婉',   emoji: '🌸', desc: '眉眼如画，温柔似水' },
+  { id: 'elegant',   label: '端庄',   emoji: '🪷', desc: '仪态万千，气度不凡' },
+  { id: 'clever',    label: '灵秀',   emoji: '🦋', desc: '慧黠灵动，古灵精怪' },
+  { id: 'cold',      label: '清冷',   emoji: '❄️', desc: '冷若冰霜，不近人情' },
+  { id: 'fierce',    label: '刚烈',   emoji: '🔥', desc: '性烈如火，宁折不弯' },
+  { id: 'charming',  label: '妩媚',   emoji: '🌙', desc: '风情万种，倾国倾城' },
+];
+
+export const ORIGIN_OPTIONS: { id: string; label: string; desc: string; statBonus: Partial<Stats> }[] = [
+  { id: 'scholar',   label: '书香门第', desc: '父亲任大理寺少卿，清正不阿', statBonus: { wisdom: 10, virtue: 10 } },
+  { id: 'military',  label: '将门虎女', desc: '父亲是镇守边关的参将', statBonus: { influence: 10, health: 5 } },
+  { id: 'merchant',  label: '商贾之家', desc: '家族经营江南丝绸生意，富甲一方', statBonus: { silver: 200, scheming: 5 } },
+  { id: 'noble',     label: '没落贵族', desc: '祖上曾是开国功臣，如今门庭冷落', statBonus: { influence: 5, favor: 5, scheming: 5 } },
+  { id: 'common',    label: '寒门碧玉', desc: '出身清贫却才情出众，被选入宫', statBonus: { wisdom: 5, virtue: 5, health: 5 } },
+];
+
+export const PERSONALITY_OPTIONS: { id: string; label: string; emoji: string; desc: string }[] = [
+  { id: 'patient',    label: '隐忍', emoji: '🌊', desc: '善于隐藏锋芒，伺机而动' },
+  { id: 'decisive',   label: '果决', emoji: '⚔️', desc: '行事雷厉风行，当断则断' },
+  { id: 'graceful',   label: '温婉', emoji: '🍃', desc: '以柔克刚，化敌为友' },
+  { id: 'cunning',    label: '机敏', emoji: '🦊', desc: '心思七窍玲珑，算无遗策' },
+  { id: 'righteous',  label: '正直', emoji: '☀️', desc: '秉持正道，不屑阴谋' },
+];
+
+export const DEFAULT_PROFILE: PlayerProfile = {
+  surname: '沈',
+  givenName: '知意',
+  fullName: '沈知意',
+  avatarId: 'gentle',
+  origin: 'scholar',
+  personality: 'patient',
+};
+
 export interface GameState {
   id: string;
   name: string;           // 存档名
+  playerProfile: PlayerProfile;  // 角色档案
   currentEpisode: number;
   stats: Stats;
   rank: Rank;
@@ -107,21 +153,33 @@ const RANK_THRESHOLDS: Record<Rank, { favor: number; influence: number; episode:
 
 // ---------- 核心函数 ----------
 
-export function createNewGame(name: string = '存档一'): GameState {
+export function createNewGame(name: string = '存档一', profile?: Partial<PlayerProfile>): GameState {
+  const p: PlayerProfile = {
+    ...DEFAULT_PROFILE,
+    ...profile,
+    fullName: profile?.fullName || `${profile?.surname || DEFAULT_PROFILE.surname}${profile?.givenName || DEFAULT_PROFILE.givenName}`,
+  };
+
+  // 根据出身加成初始属性
+  const originBonus = ORIGIN_OPTIONS.find(o => o.id === p.origin)?.statBonus || {};
+
+  const baseStats: Stats = {
+    favor: 15,
+    scheming: 20,
+    health: 100,
+    influence: 5,
+    silver: 200,
+    wisdom: 30,
+    virtue: 10,
+    cruelty: 0,
+  };
+
   return {
     id: `save_${Date.now()}`,
     name,
+    playerProfile: p,
     currentEpisode: 1,
-    stats: {
-      favor: 15,
-      scheming: 20,
-      health: 100,
-      influence: 5,
-      silver: 200,
-      wisdom: 30,
-      virtue: 10,
-      cruelty: 0,
-    },
+    stats: clampStats(applyStatChanges(baseStats, originBonus)),
     rank: '秀女',
     history: [],
     summary: '',
@@ -338,18 +396,20 @@ export function getRankProgress(rank: Rank): number {
   return idx / (RANK_ORDER.length - 1);
 }
 
-/** 获取位份中文描述 */
-export function getRankTitle(rank: Rank): string {
+/** 获取位份中文描述（支持自定义姓名） */
+export function getRankTitle(rank: Rank, profile?: PlayerProfile): string {
+  const surname = profile?.surname || '沈';
+  const givenFirst = profile?.givenName?.[0] || '知';
   const titles: Record<Rank, string> = {
     '秀女': '秀女',
     '采女': '采女',
-    '美人': '沈美人',
-    '贵人': '沈贵人',
-    '嫔': '知嫔',
-    '妃': '知妃',
-    '贵妃': '知贵妃',
-    '皇贵妃': '沈皇贵妃',
-    '皇后': '沈皇后',
+    '美人': `${surname}美人`,
+    '贵人': `${surname}贵人`,
+    '嫔': `${givenFirst}嫔`,
+    '妃': `${givenFirst}妃`,
+    '贵妃': `${givenFirst}贵妃`,
+    '皇贵妃': `${surname}皇贵妃`,
+    '皇后': `${surname}皇后`,
   };
   return titles[rank];
 }
@@ -408,6 +468,7 @@ export function getAllSaves(): GameState[] {
     // 兼容旧存档：补齐 chapters 字段
     return saves.map(s => ({
       ...s,
+      playerProfile: s.playerProfile || DEFAULT_PROFILE,
       chapters: (s.chapters || []).map(chapter => ({
         ...chapter,
         flagsSnapshot: chapter.flagsSnapshot || [],

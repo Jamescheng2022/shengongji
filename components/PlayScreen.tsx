@@ -2,8 +2,8 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useGameStore } from "@/lib/store";
-import { getRankTitle, RANK_ORDER, type AIResponse, type GameState } from "@/lib/game-engine";
-import { OPENING_NARRATION, OPENING_CHOICES } from "@/lib/prompts";
+import { getRankTitle, RANK_ORDER, AVATAR_OPTIONS, type AIResponse, type GameState } from "@/lib/game-engine";
+import { getOpeningNarration, OPENING_CHOICES } from "@/lib/prompts";
 import { StoryViewer } from "./StoryViewer";
 import { StatPanel } from "./StatPanel";
 import { ActionInput } from "./ActionInput";
@@ -54,9 +54,11 @@ export default function PlayScreen() {
     hasInitialized.current = true;
 
     if (gameState.history.length === 0 && gameState.chapters.length === 0) {
-      // 新游戏：展示开场
-      setDisplayText(OPENING_NARRATION);
-      setLastNarration(OPENING_NARRATION);
+      // 新游戏：展示开场（使用玩家角色名）
+      const p = gameState.playerProfile;
+      const narration = getOpeningNarration(p.fullName, p.surname);
+      setDisplayText(narration);
+      setLastNarration(narration);
       setChoices(OPENING_CHOICES);
       pendingChoicesRef.current = OPENING_CHOICES;
       // 预生成加速：并行预取开场选项
@@ -198,33 +200,36 @@ export default function PlayScreen() {
   const rankProgress = ((rankIdx + 1) / RANK_ORDER.length) * 100;
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-dvh flex flex-col overflow-hidden safe-top">
       {/* ====== 顶部状态栏 ====== */}
       <header
-        className="flex items-center justify-between px-4 py-3 border-b"
+        className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b shrink-0"
         style={{ background: "var(--bg-card)", borderColor: "var(--border-gold)" }}
       >
         {/* 左：返回+集数 */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => { autoSave(); setScreen("home"); }}
-            className="text-sm"
+            className="text-xs sm:text-sm shrink-0"
             style={{ color: "var(--text-secondary)" }}
           >
             ← 退出
           </button>
-          <div className="w-px h-4" style={{ background: "var(--border-gold)" }} />
-          <span className="text-sm" style={{ color: "var(--text-gold)" }}>
+          <div className="w-px h-3" style={{ background: "var(--border-gold)" }} />
+          <span className="text-xs sm:text-sm shrink-0" style={{ color: "var(--text-gold)" }}>
             第{gameState.currentEpisode}集
           </span>
         </div>
 
-        {/* 中：位份 */}
-        <div className="text-center">
-          <div className="text-sm font-semibold" style={{ color: "var(--palace-gold)" }}>
-            {getRankTitle(gameState.rank)}
+        {/* 中：头像+位份 */}
+        <div className="text-center flex flex-col items-center min-w-0 px-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-base sm:text-lg">{AVATAR_OPTIONS.find(a => a.id === gameState.playerProfile.avatarId)?.emoji || '🌸'}</span>
+            <span className="text-xs sm:text-sm font-semibold truncate" style={{ color: "var(--palace-gold)" }}>
+              {getRankTitle(gameState.rank, gameState.playerProfile)}
+            </span>
           </div>
-          <div className="w-24 h-1 mt-1 rounded-full overflow-hidden" style={{ background: "rgba(212,175,55,0.15)" }}>
+          <div className="w-16 sm:w-24 h-1 mt-1 rounded-full overflow-hidden" style={{ background: "rgba(212,175,55,0.15)" }}>
             <div
               className="h-full rounded-full transition-all duration-700"
               style={{ width: `${rankProgress}%`, background: "var(--palace-gold)" }}
@@ -233,17 +238,17 @@ export default function PlayScreen() {
         </div>
 
         {/* 右：宫册 + 属性 */}
-        <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => setScreen("book")}
-            className="px-2 py-1 border rounded text-xs transition-colors"
+            className="px-2 py-1 border rounded text-xs transition-colors active:scale-95"
             style={{ borderColor: "var(--border-gold)", color: "var(--text-gold)" }}
           >
             宫册
           </button>
           <button
             onClick={() => setShowStats(!showStats)}
-            className="px-2 py-1 border rounded text-xs transition-colors"
+            className="px-2 py-1 border rounded text-xs transition-colors active:scale-95"
             style={{ borderColor: "var(--border-gold)", color: "var(--text-gold)" }}
           >
             属性
@@ -263,7 +268,7 @@ export default function PlayScreen() {
 
       {/* ====== 主内容区（剧情+选项一起滚动） ====== */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="max-w-2xl mx-auto min-h-full px-6 md:px-10 py-10 shadow-xl border-x" style={{ borderColor: "var(--border-gold)", background: "var(--bg-primary)" }}>
+        <div className="max-w-2xl mx-auto min-h-full px-4 sm:px-6 md:px-10 py-6 sm:py-10" style={{ background: "var(--bg-primary)" }}>
           {/* 剧情文本 */}
           <StoryViewer
             text={streamingText || displayText}
@@ -279,8 +284,8 @@ export default function PlayScreen() {
 
           {/* 选项/输入区 — 紧跟剧情文本下方 */}
           {!isLoading && currentChoices.length > 0 && (
-            <div className="mt-8 mb-4">
-              <div className="divider-gold mb-6" />
+            <div className="mt-6 sm:mt-8 mb-4 safe-bottom">
+              <div className="divider-gold mb-4 sm:mb-6" />
               <ActionInput onAction={handleAction} options={currentChoices} disabled={isLoading} />
             </div>
           )}

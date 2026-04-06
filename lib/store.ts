@@ -3,6 +3,7 @@ import {
   type GameState,
   type AIResponse,
   type StoryEntry,
+  type PlayerProfile,
   createNewGame,
   processAIResponse,
   addChapter,
@@ -14,7 +15,7 @@ import {
   deleteSave,
 } from './game-engine';
 
-export type Screen = 'home' | 'play' | 'saves' | 'ending' | 'book' | 'help';
+export type Screen = 'home' | 'play' | 'saves' | 'ending' | 'book' | 'help' | 'character-setup';
 
 interface GameStore {
   // 导航
@@ -34,7 +35,7 @@ interface GameStore {
   saves: GameState[];
 
   // 操作
-  startNewGame: () => void;
+  startNewGame: (profile?: Partial<PlayerProfile>) => void;
   loadGame: (save: GameState) => void;
   refreshSaves: () => void;
   removeSave: (id: string) => void;
@@ -71,8 +72,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lastStatChanges: {},
   saves: [],
 
-  startNewGame: () => {
-    const newGame = createNewGame();
+  startNewGame: (profile) => {
+    const newGame = createNewGame('存档一', profile);
     saveSave(newGame);
     set({
       gameState: newGame,

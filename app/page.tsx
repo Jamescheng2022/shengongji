@@ -8,6 +8,7 @@ import SavesScreen from "@/components/SavesScreen";
 import EndingScreen from "@/components/EndingScreen";
 import BookScreen from "@/components/BookScreen";
 import HelpScreen from "@/components/HelpScreen";
+import CharacterSetup from "@/components/CharacterSetup";
 import BGMPlayer from "@/components/BGMPlayer";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
       {screen === "ending" && <EndingScreen />}
       {screen === "book" && <BookScreen />}
       {screen === "help" && <HelpScreen />}
+      {screen === "character-setup" && <CharacterSetup />}
       
       <BGMPlayer />
     </div>

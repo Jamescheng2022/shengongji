@@ -62,7 +62,7 @@ export default function EndingScreen() {
   const info = ENDING_INFO[gameState.ending];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 text-center">
+    <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8 sm:py-12 text-center safe-top safe-bottom">
       {/* 海报生成层 */}
       {showPoster && (
         <PosterGenerator gameState={gameState} onClose={() => setShowPoster(false)} />
@@ -70,7 +70,7 @@ export default function EndingScreen() {
 
       {/* 结局类型标签 */}
       <p
-        className="text-sm tracking-[0.5em] mb-6"
+        className="text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.5em] mb-4 sm:mb-6"
         style={{ color: info.isHappy ? "var(--palace-gold)" : "var(--text-secondary)" }}
       >
         {info.isHappy ? "— 善 终 —" : "— 终 局 —"}
@@ -78,7 +78,7 @@ export default function EndingScreen() {
 
       {/* 标题 */}
       <h1
-        className="text-4xl md:text-5xl font-black tracking-widest mb-8 animate-fade-in-up"
+        className="text-3xl sm:text-4xl md:text-5xl font-black tracking-widest mb-6 sm:mb-8 animate-fade-in-up"
         style={{ color: info.isHappy ? "var(--palace-gold)" : "var(--palace-red-light)" }}
       >
         {info.title}
@@ -86,7 +86,7 @@ export default function EndingScreen() {
 
       {/* 描述 */}
       <p
-        className="max-w-md text-base leading-relaxed mb-6 animate-fade-in-up"
+        className="max-w-md text-sm sm:text-base leading-relaxed mb-5 sm:mb-6 animate-fade-in-up"
         style={{ color: "var(--text-primary)", animationDelay: "0.3s" }}
       >
         {info.desc}
@@ -94,18 +94,18 @@ export default function EndingScreen() {
 
       {/* 统计 */}
       <div
-        className="flex gap-8 mb-12 text-sm animate-fade-in-up"
+        className="flex gap-6 sm:gap-8 mb-8 sm:mb-12 text-xs sm:text-sm animate-fade-in-up"
         style={{ color: "var(--text-secondary)", animationDelay: "0.6s" }}
       >
         <div>
-          <div className="text-2xl font-bold" style={{ color: "var(--text-gold)" }}>
+          <div className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-gold)" }}>
             {gameState.currentEpisode}
           </div>
           <div>存活集数</div>
         </div>
         <div className="w-px" style={{ background: "var(--border-gold)" }} />
         <div>
-          <div className="text-2xl font-bold" style={{ color: "var(--text-gold)" }}>
+          <div className="text-xl sm:text-2xl font-bold" style={{ color: "var(--text-gold)" }}>
             {gameState.rank}
           </div>
           <div>最终位份</div>
@@ -113,19 +113,19 @@ export default function EndingScreen() {
       </div>
 
       {/* 分隔线 */}
-      <div className="w-24 divider-gold mb-10" />
+      <div className="w-20 sm:w-24 divider-gold mb-8 sm:mb-10" />
 
       {/* 操作 */}
       <div className="flex flex-col gap-3 w-full max-w-xs animate-fade-in-up" style={{ animationDelay: "0.9s" }}>
         <ShareButton 
           gameState={gameState} 
           onGeneratePoster={() => setShowPoster(true)} 
-          className="mb-4"
+          className="mb-3 sm:mb-4"
         />
-        <button onClick={startNewGame} className="btn-palace bg-white/5 border-white/20 text-white">
+        <button onClick={() => setScreen("character-setup")} className="btn-palace bg-white/5 border-white/20 text-white min-h-[44px] active:scale-95">
           重新开始
         </button>
-        <button onClick={() => setScreen("home")} className="btn-palace bg-white/5 border-white/20 text-white">
+        <button onClick={() => setScreen("home")} className="btn-palace bg-white/5 border-white/20 text-white min-h-[44px] active:scale-95">
           返回首页
         </button>
       </div>
