@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/* ========== 新中式配色系统 ========== */
+:root {
+  /* 核心色彩 */
+  --palace-red: #8B2500;
+  --palace-red-light: #A0522D;
+  --palace-gold: #D4AF37;
+  --palace-gold-light: #F0D77B;
+  --ink-black: #1A1A1A;
+  --ink-gray: #4A4A4A;
+  --paper: #FDF5E6;
+  --paper-dark: #F5E6C8;
+  --paper-warm: #FAF0E4;
+  --jade-green: #2E8B57;
+  --plum: #8B008B;
+
+  /* 语义色 */
+  --bg-primary: #0C0A08;
+  --bg-card: rgba(26, 20, 14, 0.85);
+  --text-primary: #F5E6C8;
+  --text-secondary: #B8A080;
+  --text-gold: #D4AF37;
+  --border-gold: rgba(212, 175, 55, 0.3);
+  --border-gold-bright: rgba(212, 175, 55, 0.6);
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: "Noto Serif SC", "Songti SC", "STSong", serif;
+  
+  --color-palace-red: var(--palace-red);
+  --color-palace-gold: var(--palace-gold);
+  --color-paper: var(--paper);
+  --color-ink-black: var(--ink-black);
+}
+
+/* ========== 基础样式 ========== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========== 背景纹理 ========== */
+.bg-palace {
+  background-image: 
+    linear-gradient(rgba(12, 10, 8, 0.7), rgba(12, 10, 8, 0.9)),
+    url('/images/bg-palace.svg');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.bg-paper {
+  background-image: url('/images/bg-paper.svg');
+  background-repeat: repeat;
+  color: var(--ink-black); /* 宣纸上用墨色字体 */
+}
+
+/* ========== 滚动条 ========== */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-gold);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--palace-gold);
+}
+
+/* ========== 打字机光标 ========== */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: var(--palace-gold);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink-cursor 0.8s infinite;
+}
+
+/* ========== 数值变化浮动动画 ========== */
+@keyframes float-up {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+.stat-float {
+  animation: float-up 1.5s ease-out forwards;
+}
+
+/* ========== 金色边框发光 ========== */
+@keyframes gold-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+  50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+}
+.glow-gold {
+  animation: gold-glow 3s ease-in-out infinite;
+}
+
+/* ========== 渐入动画 ========== */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out;
+}
+
+/* ========== 分隔线 ========== */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--palace-gold) 20%,
+    var(--palace-gold) 80%,
+    transparent
+  );
+  opacity: 0.3;
+}
+
+/* ========== 古风按钮 ========== */
+.btn-palace {
+  position: relative;
+  padding: 12px 24px;
+  background: rgba(139, 37, 0, 0.15);
+  border: 1px solid var(--border-gold);
+  color: var(--text-gold);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+.btn-palace:hover {
+  background: rgba(139, 37, 0, 0.3);
+  border-color: var(--border-gold-bright);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+}
+.btn-palace:active {
+  transform: scale(0.98);
+}
+.btn-palace:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ========== 选项按钮 ========== */
+.btn-choice {
+  position: relative;
+  padding: 14px 20px;
+  background: rgba(26, 20, 14, 0.6);
+  border: 1px solid var(--border-gold);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  line-height: 1.5;
+}
+.btn-choice:hover {
+  background: rgba(139, 37, 0, 0.2);
+  border-color: var(--palace-gold);
+  transform: translateX(4px);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
+.btn-choice:active {
+  transform: translateX(4px) scale(0.99);
+}
+
+/* ========== 输入框 ========== */
+.input-palace {
+  background: rgba(26, 20, 14, 0.6);
+  border: 1px solid var(--border-gold);
+  color: var(--text-primary);
+  font-family: inherit;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+.input-palace:focus {
+  border-color: var(--palace-gold);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+}
+.input-palace::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
