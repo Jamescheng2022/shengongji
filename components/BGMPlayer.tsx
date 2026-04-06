@@ -1,93 +1,166 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 export default function BGMPlayer() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasAudio, setHasAudio] = useState(false);
+  const [hasAudio, setHasAudio] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shouldResumeRef = useRef(false);
 
+  const safePlay = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio) return false;
+
+    try {
+      if (audio.readyState === 0) {
+        audio.load();
+      }
+      await audio.play();
+      setIsPlaying(true);
+      setHasAudio(true);
+      setLoadError(false);
+      return true;
+    } catch {
+      setIsPlaying(false);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
-    // 检测 bgm.mp3 是否存在
-    const audio = new Audio("/audio/bgm.mp3");
-    audioRef.current = audio;
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
     audio.loop = true;
     audio.volume = 0.3;
+    audio.preload = "metadata";
 
-    const tryResume = () => {
-      if (!shouldResumeRef.current || !audioRef.current) return;
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-      }).catch(() => {
-        // 浏览器仍可能阻止播放，忽略即可
-      });
-      shouldResumeRef.current = false;
+    const handleReady = () => {
+      setHasAudio(true);
+      setLoadError(false);
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+      setHasAudio(true);
+      setLoadError(false);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
+    const handleError = () => {
+      setLoadError(true);
+    };
+
+    const cleanupResumeListeners = () => {
       document.removeEventListener("click", tryResume);
       document.removeEventListener("touchstart", tryResume);
       document.removeEventListener("keydown", tryResume);
+      document.removeEventListener("WeixinJSBridgeReady", tryResume as EventListener);
     };
 
-    audio.addEventListener("canplaythrough", () => {
-      setHasAudio(true);
-    });
-    audio.addEventListener("error", () => {
-      // 音频文件不存在，隐藏按钮
-      setHasAudio(false);
-    });
+    const tryResume = async () => {
+      if (!shouldResumeRef.current) return;
+      const played = await safePlay();
+      if (played) {
+        shouldResumeRef.current = false;
+        cleanupResumeListeners();
+      }
+    };
 
-    // 恢复用户偏好
+    audio.addEventListener("loadedmetadata", handleReady);
+    audio.addEventListener("canplay", handleReady);
+    audio.addEventListener("canplaythrough", handleReady);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("error", handleError);
+
     const saved = localStorage.getItem("bgm_enabled");
     if (saved === "true") {
       shouldResumeRef.current = true;
       document.addEventListener("click", tryResume, { once: true });
       document.addEventListener("touchstart", tryResume, { once: true });
       document.addEventListener("keydown", tryResume, { once: true });
+      document.addEventListener("WeixinJSBridgeReady", tryResume as EventListener, { once: true });
+      void tryResume();
     }
 
+    audio.load();
+
     return () => {
-      document.removeEventListener("click", tryResume);
-      document.removeEventListener("touchstart", tryResume);
-      document.removeEventListener("keydown", tryResume);
+      cleanupResumeListeners();
+      audio.removeEventListener("loadedmetadata", handleReady);
+      audio.removeEventListener("canplay", handleReady);
+      audio.removeEventListener("canplaythrough", handleReady);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("error", handleError);
       audio.pause();
       audio.src = "";
     };
-  }, []);
+  }, [safePlay]);
 
-  const toggleBGM = () => {
-    if (!audioRef.current || !hasAudio) return;
+  const toggleBGM = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
     if (isPlaying) {
-      audioRef.current.pause();
+      audio.pause();
       setIsPlaying(false);
+      shouldResumeRef.current = false;
       localStorage.setItem("bgm_enabled", "false");
-    } else {
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-        localStorage.setItem("bgm_enabled", "true");
-      }).catch(() => {
-        // 浏览器阻止了自动播放
-      });
+      return;
+    }
+
+    const played = await safePlay();
+    localStorage.setItem("bgm_enabled", played ? "true" : "false");
+
+    if (!played) {
+      setLoadError(true);
     }
   };
 
-  // 没有音频文件时不渲染按钮
-  if (!hasAudio) return null;
+  if (!isMounted) return null;
+
+  const title = loadError
+    ? "点此重试背景音乐"
+    : isPlaying
+      ? "暂停背景音乐"
+      : "播放背景音乐";
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <button
-        onClick={toggleBGM}
-        className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
-        style={{
-          background: isPlaying ? "var(--palace-gold)" : "rgba(0,0,0,0.6)",
-          color: isPlaying ? "var(--ink-black)" : "var(--palace-gold)",
-          border: isPlaying ? "none" : "1px solid rgba(212,175,55,0.4)",
-        }}
-        title={isPlaying ? "暂停背景音乐" : "播放背景音乐"}
-      >
-        <span className="text-xl">{isPlaying ? "♫" : "♪"}</span>
-      </button>
-    </div>
+    <>
+      <audio ref={audioRef} preload="metadata" playsInline className="hidden">
+        <source src="/audio/bgm.mp3" type="audio/mpeg" />
+      </audio>
+
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => void toggleBGM()}
+          className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg active:scale-95"
+          style={{
+            background: isPlaying ? "var(--palace-gold)" : "rgba(0,0,0,0.6)",
+            color: isPlaying ? "var(--ink-black)" : "var(--palace-gold)",
+            border: isPlaying
+              ? "none"
+              : loadError || !hasAudio
+                ? "1px solid rgba(255,255,255,0.35)"
+                : "1px solid rgba(212,175,55,0.4)",
+          }}
+          title={title}
+          aria-label={title}
+        >
+          <span className="text-xl">{isPlaying ? "♫" : "♪"}</span>
+        </button>
+      </div>
+    </>
   );
 }
